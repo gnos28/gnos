@@ -1,17 +1,30 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import AlphanumericEncoder from "alphanumeric-encoder";
+import { getAuthJson } from "../utils/getAuthJson";
 
 type Data = {
   id: number | string;
   [key: string]: string | number | undefined;
 };
 
-export const exportToSheet = async (datas: Data[], sheetId: string) => {
+type ExportToSheetProps = {
+  datas: Data[];
+  sheetId: string;
+  exportSheetId: string;
+  AUTH_JSON_PATH: string;
+};
+
+// not used right now
+export const exportToSheet = async ({
+  datas,
+  sheetId,
+  exportSheetId,
+  AUTH_JSON_PATH,
+}: ExportToSheetProps) => {
   console.log("exportToSheet");
 
-  // be be replaced by auth.json data
-  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, EXPORT_SHEET_ID } =
-    process.env;
+  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
+    getAuthJson(AUTH_JSON_PATH);
 
   // let rawdatas = fs.readFileSync("jobseasons-oauth.json", "utf8");
 
@@ -20,10 +33,10 @@ export const exportToSheet = async (datas: Data[], sheetId: string) => {
   if (
     GOOGLE_SERVICE_ACCOUNT_EMAIL &&
     GOOGLE_PRIVATE_KEY &&
-    EXPORT_SHEET_ID &&
+    exportSheetId &&
     datas.length > 0
   ) {
-    const doc = new GoogleSpreadsheet(EXPORT_SHEET_ID);
+    const doc = new GoogleSpreadsheet(exportSheetId);
     const keys = Object.keys(datas[0]);
     const newIds = datas.map((data) => data.id);
 

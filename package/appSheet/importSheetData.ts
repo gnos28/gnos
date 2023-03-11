@@ -28,7 +28,12 @@ export const importSheetData = async ({
 
   // let datas = JSON.parse(rawdatas);
 
-  if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY && sheetId && tabId) {
+  if (
+    GOOGLE_SERVICE_ACCOUNT_EMAIL &&
+    GOOGLE_PRIVATE_KEY &&
+    sheetId &&
+    tabId !== undefined
+  ) {
     const doc = new GoogleSpreadsheet(sheetId);
 
     await doc.useServiceAccountAuth({
