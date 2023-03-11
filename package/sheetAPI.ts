@@ -4,7 +4,7 @@ import { appSheet } from "./google";
 import { importSheetData } from "./appSheet/importSheetData";
 import { updateSheetRange } from "./appSheet/updateSheetRange";
 import { clearTabData } from "./appSheet/clearSheetRows";
-import { TabListItem } from "./interfaces";
+import { TabDataItem, TabListItem } from "./interfaces";
 
 type TabCache = {
   [key: string]: ({
@@ -176,7 +176,7 @@ export const sheetAPI = {
     AUTH_JSON_PATH = path;
   },
 
-  getTabIds: async (sheetId: string | undefined) => {
+  getTabIds: async (sheetId: string | undefined): Promise<TabListItem[]> => {
     console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {
       const cacheKey = sheetId;
@@ -199,7 +199,7 @@ export const sheetAPI = {
     tabList: TabListItem[],
     tabName: string,
     headerRowIndex?: number
-  ) => {
+  ): Promise<TabDataItem[]> => {
     console.log("*** sheetAPI.getTabData", tabName);
 
     const tabId = tabList.filter((tab) => tab.sheetName === tabName)[0]
