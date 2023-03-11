@@ -3,4 +3,3 @@ coverage
 dist
 auth.json
 .env
-/lib
