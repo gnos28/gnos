@@ -1,11 +1,12 @@
 import AlphanumericEncoder from "alphanumeric-encoder";
 import { appSheet } from "../google";
 
-type UpdateSheetRange = {
+type UpdateSheetRangeProps = {
   sheetId: string;
   tabName: string;
   startCoords: [number, number];
   data: any[][];
+  AUTH_JSON_PATH: string;
 };
 
 export const updateSheetRange = async ({
@@ -13,8 +14,9 @@ export const updateSheetRange = async ({
   tabName,
   startCoords,
   data,
-}: UpdateSheetRange) => {
-  const sheetApp = appSheet();
+  AUTH_JSON_PATH,
+}: UpdateSheetRangeProps) => {
+  const sheetApp = appSheet(AUTH_JSON_PATH);
 
   const encoder = new AlphanumericEncoder();
 

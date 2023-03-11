@@ -12,6 +12,11 @@ export type AddProtectedRangeProps = {
   endRowIndex: number;
 };
 
+type RunProtectedRangeProps = {
+  spreadsheetId: string;
+  AUTH_JSON_PATH: string;
+};
+
 const protectedRangeBatchBuffer: {
   [key: string]: sheets_v4.Schema$Request[];
 } = {};
@@ -51,8 +56,11 @@ export const batchUpdate = {
     });
   },
 
-  runProtectedRange: async (spreadsheetId: string) => {
-    const sheetApp = appSheet();
+  runProtectedRange: async ({
+    spreadsheetId,
+    AUTH_JSON_PATH,
+  }: RunProtectedRangeProps) => {
+    const sheetApp = appSheet(AUTH_JSON_PATH);
 
     const requests = protectedRangeBatchBuffer[spreadsheetId];
     if (requests) {

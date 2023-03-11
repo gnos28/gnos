@@ -210,11 +210,12 @@ export const sheetAPI = {
 
     if (tabCache[cacheKey] === undefined) {
       await handleReadDelay(async () => {
-        tabCache[cacheKey] = await importSheetData(
+        tabCache[cacheKey] = await importSheetData({
           sheetId,
           tabId,
-          headerRowIndex
-        );
+          headerRowIndex,
+          AUTH_JSON_PATH,
+        });
       });
     } else console.log("*** using cache 👍");
 
@@ -229,7 +230,7 @@ export const sheetAPI = {
     console.log("*** sheetAPI.getTabMetaData");
 
     const metaData = await handleReadDelay(async () => {
-      const sheetApp = appSheet();
+      const sheetApp = appSheet(AUTH_JSON_PATH);
 
       return await sheetApp.spreadsheets.get({
         spreadsheetId,
@@ -260,6 +261,7 @@ export const sheetAPI = {
         tabName,
         startCoords,
         data,
+        AUTH_JSON_PATH,
       });
     });
   },
@@ -290,7 +292,7 @@ export const sheetAPI = {
     console.log("*** sheetAPI.runBatchProtectedRange");
 
     await handleWriteDelay(async () => {
-      await batchUpdate.runProtectedRange(spreadsheetId);
+      await batchUpdate.runProtectedRange({ spreadsheetId, AUTH_JSON_PATH });
     });
   },
 
@@ -303,7 +305,13 @@ export const sheetAPI = {
     console.log("*** sheetAPI.clearTabData");
 
     await handleWriteDelay(async () => {
-      await clearTabData(sheetId, tabList, tabName, headerRowIndex);
+      await clearTabData({
+        sheetId,
+        tabList,
+        tabName,
+        headerRowIndex,
+        AUTH_JSON_PATH,
+      });
     });
   },
 };

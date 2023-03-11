@@ -1,8 +1,8 @@
 import { google } from "googleapis";
 
-const getAuth = (scopes: string[]) =>
+const getAuth = (scopes: string[], AUTH_JSON_PATH?: string) =>
   new google.auth.GoogleAuth({
-    keyFile: "./auth.json",
+    keyFile: AUTH_JSON_PATH || "./auth.json",
     scopes,
   });
 
@@ -34,9 +34,9 @@ export const appDrive = () => {
   return drive;
 };
 
-export const appSheet = () => {
+export const appSheet = (AUTH_JSON_PATH: string) => {
   const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
-  const auth = getAuth(scopes);
+  const auth = getAuth(scopes, AUTH_JSON_PATH);
 
   const sheets = google.sheets({
     version: "v4",

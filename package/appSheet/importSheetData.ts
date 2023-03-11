@@ -1,19 +1,28 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
+import { getAuthJson } from "../utils/getAuthJson";
 
 type Data = {
   id: number | string;
   [key: string]: string | number | undefined;
 };
 
-export const importSheetData = async (
-  sheetId: string | undefined,
-  tabId: string | undefined,
-  headerRowIndex?: number
-) => {
+type ImportSheetDataProps = {
+  sheetId: string | undefined;
+  tabId: string | undefined;
+  headerRowIndex?: number;
+  AUTH_JSON_PATH: string;
+};
+
+export const importSheetData = async ({
+  sheetId,
+  tabId,
+  headerRowIndex,
+  AUTH_JSON_PATH,
+}: ImportSheetDataProps) => {
   console.log("*** importSheetData 👎");
 
-  // be be replaced by auth.json data
-  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } = process.env;
+  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
+    getAuthJson(AUTH_JSON_PATH);
 
   // let rawdatas = fs.readFileSync("jobseasons-oauth.json", "utf8");
 

@@ -1,5 +1,5 @@
-import { readFileSync } from "fs";
 import { GoogleSpreadsheet } from "google-spreadsheet";
+import { getAuthJson } from "../utils/getAuthJson";
 
 type GetSheetTabIdsProps = {
   sheetId: string;
@@ -12,11 +12,8 @@ export const getSheetTabIds = async ({
 }: GetSheetTabIdsProps) => {
   console.log("*** getSheetTabIds 👎");
 
-  const authJson = readFileSync(AUTH_JSON_PATH, { encoding: "utf8" });
-  console.log("authJson", authJson);
-
-  // be be replaced by auth.json data
-  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } = process.env;
+  const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
+    getAuthJson(AUTH_JSON_PATH);
 
   if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY && sheetId) {
     const doc = new GoogleSpreadsheet(sheetId);
