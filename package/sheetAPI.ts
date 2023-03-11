@@ -51,7 +51,7 @@ let nbInQueueWrite = 0;
 let readCatchCount = 0;
 let writeCatchCount = 0;
 
-let AUTH_JSON_PATH = "./";
+let AUTH_JSON_PATH = "./auth.json";
 
 const DELAY = 200; // in ms
 const CATCH_DELAY_MULTIPLIER = 10;
@@ -182,7 +182,10 @@ export const sheetAPI = {
       const cacheKey = sheetId;
       if (tabIdsCache[cacheKey] === undefined) {
         await handleReadDelay(async () => {
-          tabIdsCache[cacheKey] = await getSheetTabIds(sheetId);
+          tabIdsCache[cacheKey] = await getSheetTabIds({
+            sheetId,
+            AUTH_JSON_PATH,
+          });
         });
       } else console.log("*** using cache 👍");
 
