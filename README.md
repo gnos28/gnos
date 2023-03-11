@@ -39,6 +39,8 @@ set your path to auth.json, include filename in the path (ex. `"./auth.json"`)
 
 ### Usage :
 
+#### READ operations :
+
 - **getTabIds**
 `sheetAPI.getTabIds({sheetId:string}) => Promise<TabListItem[]>`
 return list of sheet tabs with their respective IDs
@@ -46,3 +48,26 @@ return list of sheet tabs with their respective IDs
 - **getTabData**
 `sheetAPI.getTabData({sheetId:string, tabList:TabListItem[], tabName:string, headerRowIndex?:number}) => Promise<TabDataItem[]>`
 return tab data in the form of an array of object built according to header values
+
+- **getTabMetaData**
+`sheetAPI.getTabData({sheetId: string,fields: string,ranges: string[]}) => Promise<GaxiosResponse<sheets_v4.Schema$Spreadsheet>>`
+return tab metadatas
+
+- **clearCache**
+`sheetAPI.clearCache() => void`
+clear all of the above operation cache
+
+#### WRITE operations :
+
+- **updateRange**
+`sheetAPI.updateRange({sheetId: string,tabName: string,startCoords: [number, number],data: any[][]}) => Promise<void>`
+
+- **addBatchProtectedRange**
+`sheetAPI.addBatchProtectedRange({sheetId: string,editors: string[],namedRangeId?: string,tabId: number,startColumnIndex: number,startRowIndex: number,endColumnIndex: number,endRowIndex: number}) => void`
+
+- **runBatchProtectedRange**
+`sheetAPI.runBatchProtectedRange({sheetId: string}) => Promise<void>`
+
+- **clearTabData**
+`sheetAPI.runBatchProtectedRange({ sheetId: string,tabList: TabListItem[],tabName: string,headerRowIndex?: number}) => Promise<void>`
+
