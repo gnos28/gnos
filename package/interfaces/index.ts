@@ -8,8 +8,8 @@ export type ExtRow = BaseRow & {
 };
 
 export type TabListItem = {
-  sheetId: string;
-  sheetName: string;
+  tabId: string;
+  tabName: string;
 };
 
 export type TabDataItem = {

@@ -1,16 +1,6 @@
 import { sheets_v4 } from "googleapis";
 import { appSheet } from "../google";
-
-export type AddProtectedRangeProps = {
-  spreadsheetId: string;
-  editors: string[];
-  namedRangeId?: string;
-  sheetId: number;
-  startColumnIndex: number;
-  startRowIndex: number;
-  endColumnIndex: number;
-  endRowIndex: number;
-};
+import { AddProtectedRangeProps } from "../sheetAPI";
 
 type RunProtectedRangeProps = {
   spreadsheetId: string;
@@ -23,29 +13,29 @@ const protectedRangeBatchBuffer: {
 
 export const batchUpdate = {
   addProtectedRange: ({
-    spreadsheetId,
+    sheetId,
     editors,
     namedRangeId,
-    sheetId,
+    tabId,
     startColumnIndex,
     startRowIndex,
     endColumnIndex,
     endRowIndex,
   }: AddProtectedRangeProps) => {
-    if (!protectedRangeBatchBuffer[spreadsheetId])
-      protectedRangeBatchBuffer[spreadsheetId] = [];
+    if (!protectedRangeBatchBuffer[sheetId])
+      protectedRangeBatchBuffer[sheetId] = [];
 
     const namedRange = namedRangeId
       ? namedRangeId
       : Math.random().toString().split(".")[1];
 
-    protectedRangeBatchBuffer[spreadsheetId].push({
+    protectedRangeBatchBuffer[sheetId].push({
       addProtectedRange: {
         protectedRange: {
           editors: { users: editors },
           description: namedRange,
           range: {
-            sheetId,
+            sheetId: tabId,
             startColumnIndex,
             startRowIndex,
             endColumnIndex: endColumnIndex + 1,

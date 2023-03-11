@@ -28,8 +28,8 @@ export const getSheetTabIds = async ({
     await doc.loadInfo(); // loads document properties and worksheets
 
     return doc.sheetsByIndex.map((tab) => ({
-      sheetId: tab.sheetId,
-      sheetName: tab.title,
+      tabId: tab.sheetId,
+      tabName: tab.title,
     }));
   }
   return [];

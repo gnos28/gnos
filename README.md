@@ -15,7 +15,7 @@ Service accounts allow you to perform server to server, app-level authentication
 - Select `New Service Account` in the drop down
 - Click the `Create` button
 
-Save the service account credential file somewhere safe, and *do not check this file into source control*!  To reference the service account credential file, you have a few options.
+Save the service account credential file somewhere safe, and *do not check this file into source control* !  To reference the service account credential file, you have a few options.
 
 ### Enable spreadsheet API :
 
@@ -28,10 +28,13 @@ Click on the result, then on the button `ENABLE`
 
 ### Installation :
 
+install package
 `npm i gnos`
 
+import library
 `import { sheetAPI } from "gnos";`
 
+set your path to auth.json, include filename in the path (ex. `"./auth.json"`)
 `sheetAPI.setAuthJsonPath(<YOUR PATH TO AUTH.JSON>)`
 
 ### Usage :

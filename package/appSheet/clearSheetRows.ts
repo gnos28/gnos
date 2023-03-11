@@ -55,7 +55,7 @@ export const clearTabData = async ({
   headerRowIndex,
   AUTH_JSON_PATH,
 }: ClearTabDataProps) => {
-  const tabId = tabList.filter((tab) => tab.sheetName === tabName)[0]?.sheetId;
+  const tabId = tabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
   if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
   return await clearSheetRows({

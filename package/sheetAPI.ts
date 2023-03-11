@@ -1,4 +1,4 @@
-import { AddProtectedRangeProps, batchUpdate } from "./appSheet/batchUpdate";
+import { batchUpdate } from "./appSheet/batchUpdate";
 import { getSheetTabIds } from "./appSheet/getSheetTabIds";
 import { appSheet } from "./google";
 import { importSheetData } from "./appSheet/importSheetData";
@@ -17,13 +17,43 @@ type TabCache = {
 
 type TabIdsCache = {
   [key: string]: {
-    sheetId: string;
-    sheetName: string;
+    tabId: string;
+    tabName: string;
   }[];
 };
 
+type SetAuthJsonPathProps = {
+  path: string;
+};
+
+type GetTabIdsProps = {
+  sheetId: string | undefined;
+};
+
+type GetTabDataProps = {
+  sheetId: string;
+  tabList: TabListItem[];
+  tabName: string;
+  headerRowIndex?: number;
+};
+
+export type AddProtectedRangeProps = {
+  sheetId: string;
+  editors: string[];
+  namedRangeId?: string;
+  tabId: number;
+  startColumnIndex: number;
+  startRowIndex: number;
+  endColumnIndex: number;
+  endRowIndex: number;
+};
+
+type RunBatchProtectedRangeProps = {
+  sheetId: string;
+};
+
 type GetTabMetaDataProps = {
-  spreadsheetId: string;
+  sheetId: string;
   fields: string;
   ranges: string[];
 };
@@ -172,11 +202,11 @@ const handleWriteDelay = async <T>(
 };
 
 export const sheetAPI = {
-  setAuthJsonPath: (path: string) => {
+  setAuthJsonPath: ({ path }: SetAuthJsonPathProps) => {
     AUTH_JSON_PATH = path;
   },
 
-  getTabIds: async (sheetId: string | undefined): Promise<TabListItem[]> => {
+  getTabIds: async ({ sheetId }: GetTabIdsProps): Promise<TabListItem[]> => {
     console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {
       const cacheKey = sheetId;
@@ -194,16 +224,15 @@ export const sheetAPI = {
     return [];
   },
 
-  getTabData: async (
-    sheetId: string,
-    tabList: TabListItem[],
-    tabName: string,
-    headerRowIndex?: number
-  ): Promise<TabDataItem[]> => {
+  getTabData: async ({
+    sheetId,
+    tabList,
+    tabName,
+    headerRowIndex,
+  }: GetTabDataProps): Promise<TabDataItem[]> => {
     console.log("*** sheetAPI.getTabData", tabName);
 
-    const tabId = tabList.filter((tab) => tab.sheetName === tabName)[0]
-      ?.sheetId;
+    const tabId = tabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
     if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
     const cacheKey = sheetId + ":" + tabId;
@@ -222,18 +251,14 @@ export const sheetAPI = {
     return tabCache[cacheKey];
   },
 
-  getTabMetaData: async ({
-    spreadsheetId,
-    fields,
-    ranges,
-  }: GetTabMetaDataProps) => {
+  getTabMetaData: async ({ sheetId, fields, ranges }: GetTabMetaDataProps) => {
     console.log("*** sheetAPI.getTabMetaData");
 
     const metaData = await handleReadDelay(async () => {
       const sheetApp = appSheet(AUTH_JSON_PATH);
 
       return await sheetApp.spreadsheets.get({
-        spreadsheetId,
+        spreadsheetId: sheetId,
         fields,
         ranges,
       });
@@ -267,20 +292,20 @@ export const sheetAPI = {
   },
 
   addBatchProtectedRange: ({
-    spreadsheetId,
+    sheetId,
     editors,
     namedRangeId,
-    sheetId,
+    tabId,
     startColumnIndex,
     startRowIndex,
     endColumnIndex,
     endRowIndex,
   }: AddProtectedRangeProps) => {
     batchUpdate.addProtectedRange({
-      spreadsheetId,
+      sheetId,
       editors,
       namedRangeId,
-      sheetId,
+      tabId,
       startColumnIndex,
       startRowIndex,
       endColumnIndex,
@@ -288,11 +313,14 @@ export const sheetAPI = {
     });
   },
 
-  runBatchProtectedRange: async (spreadsheetId: string) => {
+  runBatchProtectedRange: async ({ sheetId }: RunBatchProtectedRangeProps) => {
     console.log("*** sheetAPI.runBatchProtectedRange");
 
     await handleWriteDelay(async () => {
-      await batchUpdate.runProtectedRange({ spreadsheetId, AUTH_JSON_PATH });
+      await batchUpdate.runProtectedRange({
+        spreadsheetId: sheetId,
+        AUTH_JSON_PATH,
+      });
     });
   },
 
