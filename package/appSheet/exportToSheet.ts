@@ -1,8 +1,5 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
-import * as dotenv from "dotenv";
 import AlphanumericEncoder from "alphanumeric-encoder";
-
-dotenv.config();
 
 type Data = {
   id: number | string;
@@ -12,6 +9,7 @@ type Data = {
 export const exportToSheet = async (datas: Data[], sheetId: string) => {
   console.log("exportToSheet");
 
+  // be be replaced by auth.json data
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY, EXPORT_SHEET_ID } =
     process.env;
 

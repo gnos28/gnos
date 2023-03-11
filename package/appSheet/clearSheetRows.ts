@@ -1,7 +1,5 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
-import * as dotenv from "dotenv";
 import { TabListItem } from "../interfaces";
-dotenv.config();
 
 export const clearSheetRows = async (
   sheetId: string,
@@ -10,6 +8,7 @@ export const clearSheetRows = async (
 ) => {
   console.log("clearSheetRows");
 
+  // be be replaced by auth.json data
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } = process.env;
 
   if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY) {

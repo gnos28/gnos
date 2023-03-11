@@ -51,6 +51,8 @@ let nbInQueueWrite = 0;
 let readCatchCount = 0;
 let writeCatchCount = 0;
 
+let AUTH_JSON_PATH = "./";
+
 const DELAY = 200; // in ms
 const CATCH_DELAY_MULTIPLIER = 10;
 const MAX_CATCH_COUNT = 60;
@@ -170,6 +172,10 @@ const handleWriteDelay = async <T>(
 };
 
 export const sheetAPI = {
+  setAuthJsonPath: (path: string) => {
+    AUTH_JSON_PATH = path;
+  },
+
   getTabIds: async (sheetId: string | undefined) => {
     console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {

@@ -1,7 +1,4 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
-import * as dotenv from "dotenv";
-
-dotenv.config();
 
 type Data = {
   id: number | string;
@@ -14,6 +11,8 @@ export const importSheetData = async (
   headerRowIndex?: number
 ) => {
   console.log("*** importSheetData 👎");
+
+  // be be replaced by auth.json data
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } = process.env;
 
   // let rawdatas = fs.readFileSync("jobseasons-oauth.json", "utf8");

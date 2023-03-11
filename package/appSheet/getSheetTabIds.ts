@@ -1,11 +1,9 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
-import * as dotenv from "dotenv";
-
-dotenv.config();
 
 export const getSheetTabIds = async (sheetId: string) => {
   console.log("*** getSheetTabIds 👎");
 
+  // be be replaced by auth.json data
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } = process.env;
 
   if (GOOGLE_SERVICE_ACCOUNT_EMAIL && GOOGLE_PRIVATE_KEY && sheetId) {

@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  // 👇️ this may vary depending on how you
+  // name your test files
+  "include": ["package"],
+  "exclude": ["node_modules", "**/__tests__/*"],
+  "compilerOptions": {
+    "outDir": "./lib" /* Specify an output folder for all emitted files. */
+  }
+}
