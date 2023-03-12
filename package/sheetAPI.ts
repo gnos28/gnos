@@ -1,3 +1,5 @@
+import callerPath from "caller-path";
+import path from "path";
 import { batchUpdate } from "./appSheet/batchUpdate";
 import { getSheetTabIds } from "./appSheet/getSheetTabIds";
 import { appSheet } from "./google";
@@ -226,8 +228,20 @@ export const sheetAPI = {
   /**
    * Set your auth.json path (default : "./auth.json")
    */
-  setAuthJsonPath: ({ path }: SetAuthJsonPathProps) => {
-    AUTH_JSON_PATH = path;
+  setAuthJsonPath: ({ path: authPath }: SetAuthJsonPathProps) => {
+    const callerPath_ = callerPath();
+    console.log(callerPath_);
+    if (callerPath_) {
+      const dirname = path.dirname(callerPath_);
+      console.log("dirname", dirname);
+
+      const joinedPath = path.join(dirname, authPath);
+      console.log("joinedPath", joinedPath);
+
+      const normPath = path.normalize(joinedPath);
+      console.log("normPath", normPath);
+    }
+    AUTH_JSON_PATH = authPath;
   },
 
   /**
