@@ -7,6 +7,7 @@ type ClearSheetRowsProps = {
   tabId: string;
   headerRowIndex?: number;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 export const clearSheetRows = async ({
@@ -14,8 +15,9 @@ export const clearSheetRows = async ({
   tabId,
   headerRowIndex,
   AUTH_JSON_PATH,
+  VERBOSE_MODE,
 }: ClearSheetRowsProps) => {
-  console.log("clearSheetRows");
+  if (VERBOSE_MODE) console.log("clearSheetRows");
 
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
     getAuthJson(AUTH_JSON_PATH);
@@ -42,10 +44,11 @@ export const clearSheetRows = async ({
 
 type ClearTabDataProps = {
   sheetId: string;
-  tabList: TabListItem[];
+  tabList: TabListItem[] | undefined;
   tabName: string;
   headerRowIndex?: number;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 export const clearTabData = async ({
@@ -54,7 +57,9 @@ export const clearTabData = async ({
   tabName,
   headerRowIndex,
   AUTH_JSON_PATH,
+  VERBOSE_MODE,
 }: ClearTabDataProps) => {
+  if (tabList === undefined) throw new Error(`no tabs found in spreadsheet`);
   const tabId = tabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
   if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
@@ -63,5 +68,6 @@ export const clearTabData = async ({
     tabId,
     headerRowIndex,
     AUTH_JSON_PATH,
+    VERBOSE_MODE,
   });
 };

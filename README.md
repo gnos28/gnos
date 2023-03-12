@@ -4,9 +4,9 @@
 
 ### Features :
 
-- cache handling in read operations
-- api call delays & queue to stay in the range of google limitations
-- error management : will await until google API is available again in case of error, will throw an error if not available during 120s
+- **cache handling** in read operations
+- **api call delays & queue** to stay in the range of google limitations
+- **error management** : will await until google API is available again in case of error, will throw an error if not available during 120s
 
 ### Authentication and authorization using Service account credentials
 
@@ -15,7 +15,7 @@ Service accounts allow you to perform server to server, app-level authentication
 - Select `New Service Account` in the drop down
 - Click the `Create` button
 
-Save the service account credential file somewhere safe, and *do not check this file into source control* !  To reference the service account credential file, you have a few options.
+Save the service account credential file somewhere safe, and *do not check this file into source control* ! 
 
 ### Enable spreadsheet API :
 
@@ -55,7 +55,7 @@ return tab metadatas
 
 - **clearCache**
 `sheetAPI.clearCache() => void`
-clear all of the above operation cache
+clear all of the above operations cache
 
 #### WRITE operations :
 

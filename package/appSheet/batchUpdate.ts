@@ -5,6 +5,7 @@ import { AddProtectedRangeProps } from "../sheetAPI";
 type RunProtectedRangeProps = {
   spreadsheetId: string;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 const protectedRangeBatchBuffer: {
@@ -49,12 +50,13 @@ export const batchUpdate = {
   runProtectedRange: async ({
     spreadsheetId,
     AUTH_JSON_PATH,
+    VERBOSE_MODE,
   }: RunProtectedRangeProps) => {
     const sheetApp = appSheet(AUTH_JSON_PATH);
 
     const requests = protectedRangeBatchBuffer[spreadsheetId];
     if (requests) {
-      console.log("requests count : ", requests.length);
+      if (VERBOSE_MODE) console.log("requests count : ", requests.length);
       // console.log("requests", requests);
       await sheetApp.spreadsheets.batchUpdate({
         spreadsheetId,

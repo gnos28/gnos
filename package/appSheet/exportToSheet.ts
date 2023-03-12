@@ -12,6 +12,7 @@ type ExportToSheetProps = {
   sheetId: string;
   exportSheetId: string;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 // not used right now
@@ -20,8 +21,9 @@ export const exportToSheet = async ({
   sheetId,
   exportSheetId,
   AUTH_JSON_PATH,
+  VERBOSE_MODE,
 }: ExportToSheetProps) => {
-  console.log("exportToSheet");
+  if (VERBOSE_MODE) console.log("exportToSheet");
 
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
     getAuthJson(AUTH_JSON_PATH);

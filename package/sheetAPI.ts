@@ -5,6 +5,7 @@ import { importSheetData } from "./appSheet/importSheetData";
 import { updateSheetRange } from "./appSheet/updateSheetRange";
 import { clearTabData } from "./appSheet/clearSheetRows";
 import { TabDataItem, TabListItem } from "./interfaces";
+import { getTabSize } from "./appSheet/getTabSize";
 
 type TabCache = {
   [key: string]: ({
@@ -22,6 +23,10 @@ type TabIdsCache = {
   }[];
 };
 
+type TabSizeCache = {
+  [key: string]: TabSize;
+};
+
 type SetAuthJsonPathProps = {
   path: string;
 };
@@ -32,9 +37,9 @@ type GetTabIdsProps = {
 
 type GetTabDataProps = {
   sheetId: string;
-  tabList: TabListItem[];
   tabName: string;
   headerRowIndex?: number;
+  tabList?: TabListItem[];
 };
 
 export type AddProtectedRangeProps = {
@@ -58,6 +63,16 @@ type GetTabMetaDataProps = {
   ranges: string[];
 };
 
+type GetTabSizeProps = {
+  sheetId: string;
+  tabName: string;
+};
+
+type TabSize = {
+  nbRows: number | undefined;
+  nbColumns: number | undefined;
+};
+
 type UpdateSheetRangeProps = {
   sheetId: string;
   tabName: string;
@@ -67,13 +82,14 @@ type UpdateSheetRangeProps = {
 
 type ClearTabDataProps = {
   sheetId: string;
-  tabList: TabListItem[];
   tabName: string;
   headerRowIndex?: number;
+  tabList?: TabListItem[];
 };
 
 let tabCache: TabCache = {};
 let tabIdsCache: TabIdsCache = {};
+let tabSizesCache: TabSizeCache = {};
 let lastReadRequestTime: number | undefined = undefined;
 let lastWriteRequestTime: number | undefined = undefined;
 let nbInQueueRead = 0;
@@ -82,6 +98,7 @@ let readCatchCount = 0;
 let writeCatchCount = 0;
 
 let AUTH_JSON_PATH = "./auth.json";
+let VERBOSE_MODE = false;
 
 const DELAY = 200; // in ms
 const CATCH_DELAY_MULTIPLIER = 10;
@@ -98,7 +115,8 @@ const handleReadTryCatch = async <T>(
     lastReadRequestTime = new Date().getTime();
     nbInQueueRead -= delayMultiplier || 1;
   } catch (e: any) {
-    console.log(`inside catch 💩 #${readCatchCount}`, e.message);
+    if (VERBOSE_MODE)
+      console.log(`inside catch 💩 #${readCatchCount}`, e.message);
     readCatchCount++;
     lastReadRequestTime = new Date().getTime();
     nbInQueueRead -= delayMultiplier || 1;
@@ -122,13 +140,14 @@ const handleReadDelay = async <T>(
     lastReadRequestTime &&
     currentTime < lastReadRequestTime + DELAY * nbInQueueRead
   ) {
-    console.log(
-      "*** force DELAY [READ] ",
-      nbInQueueRead,
-      lastReadRequestTime
-        ? lastReadRequestTime + DELAY * nbInQueueRead - currentTime
-        : 0
-    );
+    if (VERBOSE_MODE)
+      console.log(
+        "*** force DELAY [READ] ",
+        nbInQueueRead,
+        lastReadRequestTime
+          ? lastReadRequestTime + DELAY * nbInQueueRead - currentTime
+          : 0
+      );
     await new Promise((resolve) =>
       setTimeout(
         () => resolve(null),
@@ -155,7 +174,8 @@ const handleWriteTryCatch = async <T>(
     lastWriteRequestTime = new Date().getTime();
     nbInQueueWrite -= delayMultiplier || 1;
   } catch (e: any) {
-    console.log(`inside catch 💩 #${writeCatchCount}`, e.message);
+    if (VERBOSE_MODE)
+      console.log(`inside catch 💩 #${writeCatchCount}`, e.message);
     writeCatchCount++;
     lastWriteRequestTime = new Date().getTime();
     nbInQueueWrite -= delayMultiplier || 1;
@@ -179,13 +199,14 @@ const handleWriteDelay = async <T>(
     lastWriteRequestTime &&
     currentTime < lastWriteRequestTime + DELAY * nbInQueueWrite
   ) {
-    console.log(
-      "*** force DELAY [WRITE]",
-      nbInQueueWrite,
-      lastWriteRequestTime
-        ? lastWriteRequestTime + DELAY * nbInQueueWrite - currentTime
-        : 0
-    );
+    if (VERBOSE_MODE)
+      console.log(
+        "*** force DELAY [WRITE]",
+        nbInQueueWrite,
+        lastWriteRequestTime
+          ? lastWriteRequestTime + DELAY * nbInQueueWrite - currentTime
+          : 0
+      );
     await new Promise((resolve) =>
       setTimeout(
         () => resolve(null),
@@ -206,8 +227,12 @@ export const sheetAPI = {
     AUTH_JSON_PATH = path;
   },
 
+  enableConsoleLog: () => {
+    VERBOSE_MODE = true;
+  },
+
   getTabIds: async ({ sheetId }: GetTabIdsProps): Promise<TabListItem[]> => {
-    console.log("*** sheetAPI.getTabIds", sheetId);
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {
       const cacheKey = sheetId;
       if (tabIdsCache[cacheKey] === undefined) {
@@ -215,9 +240,10 @@ export const sheetAPI = {
           tabIdsCache[cacheKey] = await getSheetTabIds({
             sheetId,
             AUTH_JSON_PATH,
+            VERBOSE_MODE,
           });
         });
-      } else console.log("*** using cache 👍");
+      } else if (VERBOSE_MODE) console.log("*** using cache 👍");
 
       return tabIdsCache[cacheKey];
     }
@@ -230,9 +256,12 @@ export const sheetAPI = {
     tabName,
     headerRowIndex,
   }: GetTabDataProps): Promise<TabDataItem[]> => {
-    console.log("*** sheetAPI.getTabData", tabName);
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getTabData", tabName);
 
-    const tabId = tabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
+    let iTabList = tabList;
+    if (!iTabList) iTabList = await sheetAPI.getTabIds({ sheetId });
+
+    const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
     if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
     const cacheKey = sheetId + ":" + tabId;
@@ -244,15 +273,17 @@ export const sheetAPI = {
           tabId,
           headerRowIndex,
           AUTH_JSON_PATH,
+          VERBOSE_MODE,
         });
       });
-    } else console.log("*** using cache 👍");
+    } else if (VERBOSE_MODE) console.log("*** using cache 👍");
 
     return tabCache[cacheKey];
   },
 
+  // TOO MUCH COMPLEX, PUT IT AWAY FROM DOCUMENTATION AND DEPRECATE IT IN 3.0.0 (REPLACED BY getTabSize)
   getTabMetaData: async ({ sheetId, fields, ranges }: GetTabMetaDataProps) => {
-    console.log("*** sheetAPI.getTabMetaData");
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getTabMetaData");
 
     const metaData = await handleReadDelay(async () => {
       const sheetApp = appSheet(AUTH_JSON_PATH);
@@ -267,9 +298,31 @@ export const sheetAPI = {
     return metaData;
   },
 
+  getTabSize: async ({
+    sheetId,
+    tabName,
+  }: GetTabSizeProps): Promise<TabSize> => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getTabSize", tabName);
+
+    const cacheKey = "getTabSize:" + sheetId + ":" + tabName;
+
+    if (tabSizesCache[cacheKey] === undefined) {
+      await handleReadDelay(async () => {
+        tabSizesCache[cacheKey] = await getTabSize({
+          sheetId,
+          tabName,
+          AUTH_JSON_PATH,
+        });
+      });
+    } else if (VERBOSE_MODE) console.log("*** using cache 👍");
+
+    return tabSizesCache[cacheKey];
+  },
+
   clearCache: () => {
     tabCache = {};
     tabIdsCache = {};
+    tabSizesCache = {};
   },
 
   updateRange: async ({
@@ -278,7 +331,7 @@ export const sheetAPI = {
     startCoords,
     data,
   }: UpdateSheetRangeProps) => {
-    console.log("*** sheetAPI.updateRange");
+    if (VERBOSE_MODE) console.log("*** sheetAPI.updateRange");
 
     await handleWriteDelay(async () => {
       await updateSheetRange({
@@ -314,12 +367,13 @@ export const sheetAPI = {
   },
 
   runBatchProtectedRange: async ({ sheetId }: RunBatchProtectedRangeProps) => {
-    console.log("*** sheetAPI.runBatchProtectedRange");
+    if (VERBOSE_MODE) console.log("*** sheetAPI.runBatchProtectedRange");
 
     await handleWriteDelay(async () => {
       await batchUpdate.runProtectedRange({
         spreadsheetId: sheetId,
         AUTH_JSON_PATH,
+        VERBOSE_MODE,
       });
     });
   },
@@ -330,15 +384,19 @@ export const sheetAPI = {
     tabName,
     headerRowIndex,
   }: ClearTabDataProps) => {
-    console.log("*** sheetAPI.clearTabData");
+    if (VERBOSE_MODE) console.log("*** sheetAPI.clearTabData");
+
+    let iTabList = tabList;
+    if (!iTabList) iTabList = await sheetAPI.getTabIds({ sheetId });
 
     await handleWriteDelay(async () => {
       await clearTabData({
         sheetId,
-        tabList,
+        tabList: iTabList,
         tabName,
         headerRowIndex,
         AUTH_JSON_PATH,
+        VERBOSE_MODE,
       });
     });
   },

@@ -4,13 +4,15 @@ import { getAuthJson } from "../utils/getAuthJson";
 type GetSheetTabIdsProps = {
   sheetId: string;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 export const getSheetTabIds = async ({
   sheetId,
   AUTH_JSON_PATH,
+  VERBOSE_MODE,
 }: GetSheetTabIdsProps) => {
-  console.log("*** getSheetTabIds 👎");
+  if (VERBOSE_MODE) console.log("*** getSheetTabIds 👎");
 
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
     getAuthJson(AUTH_JSON_PATH);

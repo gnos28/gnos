@@ -11,6 +11,7 @@ type ImportSheetDataProps = {
   tabId: string | undefined;
   headerRowIndex?: number;
   AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
 };
 
 export const importSheetData = async ({
@@ -18,8 +19,9 @@ export const importSheetData = async ({
   tabId,
   headerRowIndex,
   AUTH_JSON_PATH,
+  VERBOSE_MODE,
 }: ImportSheetDataProps) => {
-  console.log("*** importSheetData 👎");
+  if (VERBOSE_MODE) console.log("*** importSheetData 👎");
 
   const { GOOGLE_SERVICE_ACCOUNT_EMAIL, GOOGLE_PRIVATE_KEY } =
     getAuthJson(AUTH_JSON_PATH);
