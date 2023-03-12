@@ -24,7 +24,7 @@
   "dependencies": {
     "@types/google-spreadsheet": "^3.3.1",
     "alphanumeric-encoder": "^1.6.0",
-    "caller-path": "^4.0.0",
+    "caller-path": "^3.0.1",
     "google-spreadsheet": "^3.3.0",
     "googleapis": "^112.0.0"
   },
