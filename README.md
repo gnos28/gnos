@@ -47,7 +47,7 @@ return list of sheet tabs with their respective IDs
 
 - **getTabData**
 `sheetAPI.getTabData({sheetId:string, tabName:string, headerRowIndex?:number, tabList?:TabListItem[]}) => Promise<TabDataItem[]>`
-return tab data in the form of an array of object built according to header values
+return tab data in the form of an array of objects built according to header values
 
 - **getTabSize**
 `sheetAPI.getTabData({sheetId: string, tabName: string) => Promise<TabSize>`

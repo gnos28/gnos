@@ -223,14 +223,23 @@ const handleWriteDelay = async <T>(
 };
 
 export const sheetAPI = {
+  /**
+   * Set your auth.json path (default : "./auth.json")
+   */
   setAuthJsonPath: ({ path }: SetAuthJsonPathProps) => {
     AUTH_JSON_PATH = path;
   },
 
+  /**
+   * Turns on logs with detailed infos over cache usage & delay between requests
+   */
   enableConsoleLog: () => {
     VERBOSE_MODE = true;
   },
 
+  /**
+   * Return list of sheet tabs with their respective IDs
+   */
   getTabIds: async ({ sheetId }: GetTabIdsProps): Promise<TabListItem[]> => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {
@@ -250,11 +259,14 @@ export const sheetAPI = {
     return [];
   },
 
+  /**
+   * Return tab data in the form of an array of objects built according to header values
+   */
   getTabData: async ({
     sheetId,
-    tabList,
     tabName,
     headerRowIndex,
+    tabList,
   }: GetTabDataProps): Promise<TabDataItem[]> => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabData", tabName);
 
@@ -282,6 +294,9 @@ export const sheetAPI = {
   },
 
   // TOO MUCH COMPLEX, PUT IT AWAY FROM DOCUMENTATION AND DEPRECATE IT IN 3.0.0 (REPLACED BY getTabSize)
+  /**
+   * Will be deprecated in 3.0.0 - replaced by getTabSize
+   */
   getTabMetaData: async ({ sheetId, fields, ranges }: GetTabMetaDataProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabMetaData");
 
@@ -298,6 +313,9 @@ export const sheetAPI = {
     return metaData;
   },
 
+  /**
+   * Return columns & rows count for a tab
+   */
   getTabSize: async ({
     sheetId,
     tabName,
@@ -319,12 +337,19 @@ export const sheetAPI = {
     return tabSizesCache[cacheKey];
   },
 
+  /**
+   * Clear all read data in cache
+   */
   clearCache: () => {
     tabCache = {};
     tabIdsCache = {};
     tabSizesCache = {};
   },
 
+  /**
+   * Udpate values of a range of cells
+   * startCoords index start at 1
+   */
   updateRange: async ({
     sheetId,
     tabName,
@@ -378,11 +403,14 @@ export const sheetAPI = {
     });
   },
 
+  /**
+   * Clear all values of a defined tab
+   */
   clearTabData: async ({
     sheetId,
-    tabList,
     tabName,
     headerRowIndex,
+    tabList,
   }: ClearTabDataProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.clearTabData");
 
