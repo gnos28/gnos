@@ -20,7 +20,6 @@
   ],
   "author": "Julien VIGNERON <gnos28@gmail.com>",
   "license": "ISC",
-  "type": "module",
   "dependencies": {
     "@types/google-spreadsheet": "^3.3.1",
     "alphanumeric-encoder": "^1.6.0",
