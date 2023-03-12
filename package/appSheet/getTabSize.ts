@@ -13,7 +13,7 @@ export const getTabSize = async ({
 }: GetTabSizeProps) => {
   const sheetApp = appSheet(AUTH_JSON_PATH);
   const fields = "*";
-  const ranges = [`'${tabName}!A:A`];
+  const ranges = [`'${tabName}'!A:A`];
   const errorReturn = {
     nbRows: undefined,
     nbColumns: undefined,
