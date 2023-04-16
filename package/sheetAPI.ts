@@ -8,6 +8,12 @@ import { updateSheetRange } from "./appSheet/updateSheetRange";
 import { clearTabData } from "./appSheet/clearSheetRows";
 import { TabDataItem, TabListItem } from "./interfaces";
 import { getTabSize } from "./appSheet/getTabSize";
+import { exportToSheet } from "./appSheet/exportToSheet";
+
+export type Data = {
+  id: number | string;
+  [key: string]: string | number | undefined;
+};
 
 type TabCache = {
   [key: string]: ({
@@ -80,6 +86,12 @@ type UpdateSheetRangeProps = {
   tabName: string;
   startCoords: [number, number];
   data: any[][];
+};
+
+type AppendToSheetProps = {
+  sheetId: string;
+  tabName: string;
+  data: Data[];
 };
 
 type ClearTabDataProps = {
@@ -227,6 +239,7 @@ const handleWriteDelay = async <T>(
 export const sheetAPI = {
   /**
    * Set your auth.json path (default : "./auth.json")
+   * use something like path.join(__dirname + "/" + <RELATIVE PATH TO YOUR FILE>)
    */
   setAuthJsonPath: ({ path: authPath }: SetAuthJsonPathProps) => {
     // const callerPath_ = callerPath({depth:2});
@@ -378,6 +391,28 @@ export const sheetAPI = {
         tabName,
         startCoords,
         data,
+        AUTH_JSON_PATH,
+      });
+    });
+  },
+
+  /**
+   * Append data to a sheet
+   */
+  appendToSheet: async ({ sheetId, tabName, data }: AppendToSheetProps) => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.updateRange");
+
+    const iTabList = await sheetAPI.getTabIds({ sheetId });
+
+    const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
+    if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
+
+    await handleWriteDelay(async () => {
+      await exportToSheet({
+        datas: data,
+        sheetId: tabId,
+        exportSheetId: sheetId,
+        VERBOSE_MODE: false,
         AUTH_JSON_PATH,
       });
     });

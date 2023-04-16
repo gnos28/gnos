@@ -61,6 +61,11 @@ clear all of the above operations cache
 
 - **updateRange**
 `sheetAPI.updateRange({sheetId: string, tabName: string, startCoords: [number, number], data: any[][]}) => Promise<void>`
+update a specific range
+
+- **appendToSheet**
+`sheetAPI.appendToSheet({sheetId: string, tabName: string, data: Data[]}) => Promise<void>`
+append a line of data to second line of a tab (matching headers)
 
 - **addBatchProtectedRange**
 `sheetAPI.addBatchProtectedRange({sheetId: string, editors: string[], namedRangeId?: string, tabId: number, startColumnIndex: number, startRowIndex: number, endColumnIndex: number, endRowIndex: number}) => void`

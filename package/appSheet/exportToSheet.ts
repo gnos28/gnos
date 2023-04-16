@@ -1,11 +1,7 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import AlphanumericEncoder from "alphanumeric-encoder";
 import { getAuthJson } from "../utils/getAuthJson";
-
-type Data = {
-  id: number | string;
-  [key: string]: string | number | undefined;
-};
+import { Data } from "../sheetAPI";
 
 type ExportToSheetProps = {
   datas: Data[];
