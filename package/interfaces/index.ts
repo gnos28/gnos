@@ -18,3 +18,8 @@ export type TabDataItem = {
   rowIndex: number;
   a1Range: string;
 };
+
+export type DataRowWithId = {
+  id: number | string;
+  [key: string]: string | number | undefined;
+};

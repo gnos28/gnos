@@ -6,14 +6,9 @@ import { appSheet } from "./google";
 import { importSheetData } from "./appSheet/importSheetData";
 import { updateSheetRange } from "./appSheet/updateSheetRange";
 import { clearTabData } from "./appSheet/clearSheetRows";
-import { TabDataItem, TabListItem } from "./interfaces";
+import { DataRowWithId, TabDataItem, TabListItem } from "./interfaces";
 import { getTabSize } from "./appSheet/getTabSize";
 import { exportToSheet } from "./appSheet/exportToSheet";
-
-export type Data = {
-  id: number | string;
-  [key: string]: string | number | undefined;
-};
 
 type TabCache = {
   [key: string]: ({
@@ -91,7 +86,7 @@ type UpdateSheetRangeProps = {
 type AppendToSheetProps = {
   sheetId: string;
   tabName: string;
-  data: Data[];
+  data: DataRowWithId[];
 };
 
 type ClearTabDataProps = {

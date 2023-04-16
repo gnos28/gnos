@@ -1,10 +1,10 @@
 import { GoogleSpreadsheet } from "google-spreadsheet";
 import AlphanumericEncoder from "alphanumeric-encoder";
 import { getAuthJson } from "../utils/getAuthJson";
-import { Data } from "../sheetAPI";
+import { DataRowWithId } from "../interfaces";
 
 type ExportToSheetProps = {
-  datas: Data[];
+  datas: DataRowWithId[];
   sheetId: string;
   exportSheetId: string;
   AUTH_JSON_PATH: string;
@@ -53,11 +53,11 @@ export const exportToSheet = async ({
     // console.log("rows", rows);
 
     const previousDatas = rows.map((row) => {
-      const previousData: Omit<Data, "id"> = {};
+      const previousData: Omit<DataRowWithId, "id"> = {};
       keys.forEach((key) => (previousData[key] = row[key]));
 
       return previousData;
-    }) as Data[];
+    }) as DataRowWithId[];
 
     const previousDatasIds = previousDatas.map((data) => data.id);
     const newDatas = datas.filter(
