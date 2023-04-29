@@ -56,6 +56,16 @@ export type AddProtectedRangeProps = {
   endRowIndex: number;
 };
 
+type GetProtectedRangeIdsProps = {
+  sheetId: string;
+  tabName: string;
+};
+
+type DeleteProtectedRangeProps = {
+  sheetId: string;
+  protectedRangeIds: number[];
+};
+
 type RunBatchProtectedRangeProps = {
   sheetId: string;
 };
@@ -409,6 +419,52 @@ export const sheetAPI = {
         exportSheetId: sheetId,
         VERBOSE_MODE: false,
         AUTH_JSON_PATH,
+      });
+    });
+  },
+
+  /**
+   * get all protectedRange ids of a defined tab
+   */
+  getProtectedRangeIds: async ({
+    sheetId,
+    tabName,
+  }: GetProtectedRangeIdsProps) => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getProtectedRangeIds");
+
+    const iTabList = await sheetAPI.getTabIds({ sheetId });
+
+    const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
+    if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
+
+    let protectedRangesIds: number[] = [];
+
+    await handleReadDelay(async () => {
+      protectedRangesIds = await batchUpdate.getProtectedRangeIds({
+        spreadsheetId: sheetId,
+        sheetId: parseInt(tabId, 10),
+        AUTH_JSON_PATH,
+      });
+    });
+
+    return protectedRangesIds;
+  },
+
+  /**
+   * delete a list of protected range ids
+   */
+  deleteProtectedRange: async ({
+    sheetId,
+    protectedRangeIds,
+  }: DeleteProtectedRangeProps) => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.deleteProtectedRange");
+
+    await handleWriteDelay(async () => {
+      await batchUpdate.deleteProtectedRange({
+        spreadsheetId: sheetId,
+        protectedRangeIds,
+        AUTH_JSON_PATH,
+        VERBOSE_MODE,
       });
     });
   },

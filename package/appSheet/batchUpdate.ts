@@ -8,6 +8,19 @@ type RunProtectedRangeProps = {
   VERBOSE_MODE: boolean;
 };
 
+type GetProtectedRangeIdsProps = {
+  spreadsheetId: string;
+  sheetId: number;
+  AUTH_JSON_PATH: string;
+};
+
+type DeleteProtectedRangeProps = {
+  spreadsheetId: string;
+  protectedRangeIds: number[];
+  AUTH_JSON_PATH: string;
+  VERBOSE_MODE: boolean;
+};
+
 const protectedRangeBatchBuffer: {
   [key: string]: sheets_v4.Schema$Request[];
 } = {};
@@ -66,5 +79,64 @@ export const batchUpdate = {
       });
       protectedRangeBatchBuffer[spreadsheetId] = [];
     }
+  },
+
+  getProtectedRangeIds: async ({
+    spreadsheetId,
+    sheetId,
+    AUTH_JSON_PATH,
+  }: GetProtectedRangeIdsProps) => {
+    const sheetApp = appSheet(AUTH_JSON_PATH);
+
+    const getResult = await sheetApp.spreadsheets.get({ spreadsheetId });
+
+    const sheets = getResult.data.sheets;
+    if (sheets !== undefined) {
+      const sheet = sheets.filter(
+        (sheet) => sheet.properties?.sheetId === sheetId
+      )[0];
+
+      const protectedRanges = sheet.protectedRanges;
+
+      if (protectedRanges !== undefined) {
+        return protectedRanges
+          .map((protectedRange) => protectedRange.protectedRangeId)
+          .filter((id) => id !== null && id !== undefined) as number[];
+      }
+    }
+
+    return [];
+  },
+
+  deleteProtectedRange: async ({
+    spreadsheetId,
+    protectedRangeIds,
+    AUTH_JSON_PATH,
+    VERBOSE_MODE,
+  }: DeleteProtectedRangeProps) => {
+    const sheetApp = appSheet(AUTH_JSON_PATH);
+
+    const requests: sheets_v4.Schema$Request[] = protectedRangeIds.map(
+      (protectedRangeId) => ({
+        deleteProtectedRange: { protectedRangeId },
+      })
+    );
+    if (VERBOSE_MODE)
+      console.log("[deleteProtectedRange] requests count : ", requests.length);
+    // console.log("requests", requests);
+    const startTime = new Date().getTime();
+
+    await sheetApp.spreadsheets.batchUpdate({
+      spreadsheetId,
+      requestBody: {
+        requests,
+      },
+    });
+
+    if (VERBOSE_MODE)
+      console.log(
+        "[deleteProtectedRange] time taken (ms) : ",
+        new Date().getTime() - startTime
+      );
   },
 };

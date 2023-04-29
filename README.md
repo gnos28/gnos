@@ -57,6 +57,10 @@ return columns & rows count for a tab
 `sheetAPI.clearCache() => void`
 clear all of the above operations cache
 
+- **getProtectedRangeIds**
+`sheetAPI.getProtectedRangeIds({sheetId: string, tabName: string) => Promise<number[]>`
+get all protectedRange ids of a defined tab
+
 #### WRITE operations :
 
 - **updateRange**
@@ -72,6 +76,10 @@ append a line of data to second line of a tab (matching headers)
 
 - **runBatchProtectedRange**
 `sheetAPI.runBatchProtectedRange({sheetId: string}) => Promise<void>`
+
+- **deleteProtectedRange**
+`sheetAPI.deleteProtectedRange({sheetId: string, protectedRangeIds:number[]}) => Promise<void>`
+delete a list of protected range ids
 
 - **clearTabData**
 `sheetAPI.runBatchProtectedRange({ sheetId: string, tabName: string, headerRowIndex?: number, tabList?: TabListItem[]}) => Promise<void>`
