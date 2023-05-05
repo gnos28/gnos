@@ -13,7 +13,7 @@ export type TabListItem = {
 };
 
 export type TabDataItem = {
-  [key: string]: string;
+  [key: string]: string | number;
 } & {
   rowIndex: number;
   a1Range: string;
