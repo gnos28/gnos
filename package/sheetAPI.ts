@@ -309,11 +309,8 @@ export const sheetAPI = {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabData", tabName);
 
     let iTabList = tabList;
-    if (!iTabList)
+    if (iTabList === undefined)
       iTabList = await sheetAPI.getTabIds({ sheetId, disableCache });
-
-    if (!iTabList || !Object.keys(iTabList).includes("tabName"))
-      throw new Error(`iTabList empty`);
 
     const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
     if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
