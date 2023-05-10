@@ -312,7 +312,7 @@ export const sheetAPI = {
     if (!iTabList)
       iTabList = await sheetAPI.getTabIds({ sheetId, disableCache });
 
-    if (!Object.keys(iTabList).includes("tabName"))
+    if (!iTabList || !Object.keys(iTabList).includes("tabName"))
       throw new Error(`iTabList empty`);
 
     const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
