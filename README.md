@@ -42,11 +42,11 @@ set your path to auth.json, include filename in the path (ex. `"./auth.json"`)
 #### READ operations :
 
 - **getTabIds**
-`sheetAPI.getTabIds({sheetId:string}) => Promise<TabListItem[]>`
+`sheetAPI.getTabIds({sheetId:string, disableCache?: boolean}) => Promise<TabListItem[]>`
 return list of sheet tabs with their respective IDs
 
 - **getTabData**
-`sheetAPI.getTabData({sheetId:string, tabName:string, headerRowIndex?:number, tabList?:TabListItem[]}) => Promise<TabDataItem[]>`
+`sheetAPI.getTabData({sheetId:string, tabName:string, headerRowIndex?:number, tabList?:TabListItem[], disableCache?: boolean}) => Promise<TabDataItem[]>`
 return tab data in the form of an array of objects built according to header values
 
 - **getTabSize**

@@ -36,6 +36,7 @@ type SetAuthJsonPathProps = {
 
 type GetTabIdsProps = {
   sheetId: string | undefined;
+  disableCache?: boolean;
 };
 
 type GetTabDataProps = {
@@ -43,6 +44,7 @@ type GetTabDataProps = {
   tabName: string;
   headerRowIndex?: number;
   tabList?: TabListItem[];
+  disableCache?: boolean;
 };
 
 export type AddProtectedRangeProps = {
@@ -272,11 +274,14 @@ export const sheetAPI = {
   /**
    * Return list of sheet tabs with their respective IDs
    */
-  getTabIds: async ({ sheetId }: GetTabIdsProps): Promise<TabListItem[]> => {
+  getTabIds: async ({
+    sheetId,
+    disableCache,
+  }: GetTabIdsProps): Promise<TabListItem[]> => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabIds", sheetId);
     if (sheetId) {
       const cacheKey = sheetId;
-      if (tabIdsCache[cacheKey] === undefined) {
+      if (disableCache || tabIdsCache[cacheKey] === undefined) {
         await handleReadDelay(async () => {
           tabIdsCache[cacheKey] = await getSheetTabIds({
             sheetId,
@@ -299,18 +304,23 @@ export const sheetAPI = {
     tabName,
     headerRowIndex,
     tabList,
+    disableCache,
   }: GetTabDataProps): Promise<TabDataItem[]> => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabData", tabName);
 
     let iTabList = tabList;
-    if (!iTabList) iTabList = await sheetAPI.getTabIds({ sheetId });
+    if (!iTabList)
+      iTabList = await sheetAPI.getTabIds({ sheetId, disableCache });
+
+    if (!Object.keys(iTabList).includes("tabName"))
+      throw new Error(`iTabList empty`);
 
     const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
     if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
     const cacheKey = sheetId + ":" + tabId;
 
-    if (tabCache[cacheKey] === undefined) {
+    if (disableCache || tabCache[cacheKey] === undefined) {
       await handleReadDelay(async () => {
         tabCache[cacheKey] = await importSheetData({
           sheetId,
