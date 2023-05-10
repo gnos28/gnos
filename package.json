@@ -1,6 +1,6 @@
 {
   "name": "gnos",
-  "version": "2.4.1",
+  "version": "2.4.2",
   "description": "GNOS - Googleapi Now Over Simplificated - google api wrapper to make it easier to use !",
   "main": "lib/sheetAPI.js",
   "exports": "./lib/sheetAPI.js",
