@@ -60,6 +60,16 @@ export const batchUpdate = {
     });
   },
 
+  clearBuffer: () => {
+    Object.keys(protectedRangeBatchBuffer).forEach((key) => {
+      protectedRangeBatchBuffer[key] = [];
+    });
+  },
+
+  getBatchProtectedRange: () => {
+    return protectedRangeBatchBuffer;
+  },
+
   runProtectedRange: async ({
     spreadsheetId,
     AUTH_JSON_PATH,
@@ -68,15 +78,27 @@ export const batchUpdate = {
     const sheetApp = appSheet(AUTH_JSON_PATH);
 
     const requests = protectedRangeBatchBuffer[spreadsheetId];
-    if (requests) {
-      if (VERBOSE_MODE) console.log("requests count : ", requests.length);
-      // console.log("requests", requests);
+    if (requests.length > 0) {
+      if (VERBOSE_MODE)
+        console.log(
+          spreadsheetId.substring(0, 8),
+          "[runProtectedRange] requests count : ",
+          requests.length
+        );
+      const startTime = new Date().getTime();
+
       await sheetApp.spreadsheets.batchUpdate({
         spreadsheetId,
         requestBody: {
           requests,
         },
       });
+      if (VERBOSE_MODE)
+        console.log(
+          spreadsheetId.substring(0, 8),
+          "[runProtectedRange] time taken (ms) : ",
+          new Date().getTime() - startTime
+        );
       protectedRangeBatchBuffer[spreadsheetId] = [];
     }
   },
@@ -122,8 +144,12 @@ export const batchUpdate = {
       })
     );
     if (VERBOSE_MODE)
-      console.log("[deleteProtectedRange] requests count : ", requests.length);
-    // console.log("requests", requests);
+      console.log(
+        spreadsheetId.substring(0, 8),
+        "[deleteProtectedRange] requests count : ",
+        requests.length
+      );
+
     const startTime = new Date().getTime();
 
     await sheetApp.spreadsheets.batchUpdate({
@@ -135,6 +161,7 @@ export const batchUpdate = {
 
     if (VERBOSE_MODE)
       console.log(
+        spreadsheetId.substring(0, 8),
         "[deleteProtectedRange] time taken (ms) : ",
         new Date().getTime() - startTime
       );

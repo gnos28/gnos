@@ -1,5 +1,3 @@
-// import path from "path";
-// import callerPath from "caller-path";
 import { batchUpdate } from "./appSheet/batchUpdate";
 import { getSheetTabIds } from "./appSheet/getSheetTabIds";
 import { appSheet } from "./google";
@@ -70,6 +68,7 @@ type DeleteProtectedRangeProps = {
 
 type RunBatchProtectedRangeProps = {
   sheetId: string;
+  onTimeoutCallback?: () => Promise<void>;
 };
 
 type GetTabMetaDataProps = {
@@ -115,7 +114,6 @@ let lastReadRequestTime: number | undefined = undefined;
 let lastWriteRequestTime: number | undefined = undefined;
 let nbInQueueRead = 0;
 let nbInQueueWrite = 0;
-let readCatchCount = 0;
 let writeCatchCount = 0;
 
 let AUTH_JSON_PATH = "./auth.json";
@@ -124,15 +122,40 @@ let VERBOSE_MODE = false;
 const DELAY = 200; // in ms
 const CATCH_DELAY_MULTIPLIER = 10;
 const MAX_CATCH_COUNT = 60;
+const MAX_AWAITING_TIME = 120_000;
 
-const handleReadTryCatch = async <T>(
-  callback: () => Promise<T>,
-  delayMultiplier?: number
-) => {
+export class MaxAwaitingTimeError extends Error {}
+
+type HandleReadTryCatchProps<T> = {
+  callback: () => Promise<T>;
+  readCatchCount: number;
+  delayMultiplier?: number;
+  onTimeoutCallback?: () => Promise<void>;
+};
+
+const handleReadTryCatch = async <T>({
+  callback,
+  readCatchCount,
+  delayMultiplier,
+  onTimeoutCallback,
+}: HandleReadTryCatchProps<T>) => {
   let res: T | undefined = undefined;
+  let timeout: NodeJS.Timeout | undefined = undefined;
 
   try {
+    timeout = setTimeout(async () => {
+      if (VERBOSE_MODE) console.log("[READ] MAX_AWAITING_TIME reached 💀");
+      if (onTimeoutCallback !== undefined) {
+        await onTimeoutCallback();
+        readCatchCount = MAX_CATCH_COUNT;
+      }
+      throw new MaxAwaitingTimeError();
+    }, MAX_AWAITING_TIME);
+
     res = await callback();
+
+    clearTimeout(timeout);
+
     lastReadRequestTime = new Date().getTime();
     nbInQueueRead -= delayMultiplier || 1;
   } catch (e: any) {
@@ -141,19 +164,34 @@ const handleReadTryCatch = async <T>(
     readCatchCount++;
     lastReadRequestTime = new Date().getTime();
     nbInQueueRead -= delayMultiplier || 1;
+    clearTimeout(timeout);
 
     if (readCatchCount < MAX_CATCH_COUNT)
-      res = await handleReadDelay(callback, CATCH_DELAY_MULTIPLIER);
+      res = await handleReadDelay({
+        callback,
+        readCatchCount,
+        delayMultiplier: CATCH_DELAY_MULTIPLIER,
+        onTimeoutCallback,
+      });
   } finally {
     readCatchCount = 0;
     return res as T;
   }
 };
 
-const handleReadDelay = async <T>(
-  callback: () => Promise<T>,
-  delayMultiplier?: number
-) => {
+type HandleReadDelayProps<T> = {
+  callback: () => Promise<T>;
+  readCatchCount?: number;
+  delayMultiplier?: number;
+  onTimeoutCallback?: () => Promise<void>;
+};
+
+const handleReadDelay = async <T>({
+  callback,
+  readCatchCount = 0,
+  delayMultiplier,
+  onTimeoutCallback,
+}: HandleReadDelayProps<T>) => {
   const currentTime = new Date().getTime();
   nbInQueueRead += delayMultiplier || 1;
 
@@ -162,13 +200,12 @@ const handleReadDelay = async <T>(
     currentTime < lastReadRequestTime + DELAY * nbInQueueRead
   ) {
     if (VERBOSE_MODE)
-      console.log(
-        "*** force DELAY [READ] ",
-        nbInQueueRead,
-        lastReadRequestTime
+      console.log("*** force DELAY [READ] ", {
+        nbInQueueRead: nbInQueueRead / (delayMultiplier || 1),
+        timeout: lastReadRequestTime
           ? lastReadRequestTime + DELAY * nbInQueueRead - currentTime
-          : 0
-      );
+          : 0,
+      });
     await new Promise((resolve) =>
       setTimeout(
         () => resolve(null),
@@ -179,19 +216,45 @@ const handleReadDelay = async <T>(
     );
   }
 
-  const res: T = await handleReadTryCatch(callback, delayMultiplier);
+  const res: T = await handleReadTryCatch({
+    callback,
+    readCatchCount,
+    delayMultiplier,
+    onTimeoutCallback,
+  });
 
   return res;
 };
 
-const handleWriteTryCatch = async <T>(
-  callback: () => Promise<T>,
-  delayMultiplier?: number
-) => {
+type HandleWriteTryCatchProps<T> = {
+  callback: () => Promise<T>;
+  writeCatchCount: number;
+  delayMultiplier?: number;
+  onTimeoutCallback?: () => Promise<void>;
+};
+
+const handleWriteTryCatch = async <T>({
+  callback,
+  writeCatchCount,
+  delayMultiplier,
+  onTimeoutCallback,
+}: HandleWriteTryCatchProps<T>) => {
   let res: T | undefined = undefined;
+  let timeout: NodeJS.Timeout | undefined = undefined;
 
   try {
+    timeout = setTimeout(async () => {
+      if (VERBOSE_MODE) console.log("[WRITE] MAX_AWAITING_TIME reached 💀");
+      if (onTimeoutCallback !== undefined) {
+        await onTimeoutCallback();
+        writeCatchCount = MAX_CATCH_COUNT;
+      }
+      throw new MaxAwaitingTimeError();
+    }, MAX_AWAITING_TIME);
+
     res = await callback();
+    clearTimeout(timeout);
+
     lastWriteRequestTime = new Date().getTime();
     nbInQueueWrite -= delayMultiplier || 1;
   } catch (e: any) {
@@ -200,19 +263,34 @@ const handleWriteTryCatch = async <T>(
     writeCatchCount++;
     lastWriteRequestTime = new Date().getTime();
     nbInQueueWrite -= delayMultiplier || 1;
+    clearTimeout(timeout);
 
     if (writeCatchCount < MAX_CATCH_COUNT)
-      res = await handleWriteDelay(callback, CATCH_DELAY_MULTIPLIER);
+      res = await handleWriteDelay({
+        callback,
+        writeCatchCount,
+        delayMultiplier: CATCH_DELAY_MULTIPLIER,
+        onTimeoutCallback,
+      });
   } finally {
     writeCatchCount = 0;
     return res as T;
   }
 };
 
-const handleWriteDelay = async <T>(
-  callback: () => Promise<T>,
-  delayMultiplier?: number
-) => {
+type HandleWriteDelayProps<T> = {
+  callback: () => Promise<T>;
+  writeCatchCount?: number;
+  delayMultiplier?: number;
+  onTimeoutCallback?: () => Promise<void>;
+};
+
+const handleWriteDelay = async <T>({
+  callback,
+  writeCatchCount = 0,
+  delayMultiplier,
+  onTimeoutCallback,
+}: HandleWriteDelayProps<T>) => {
   const currentTime = new Date().getTime();
   nbInQueueWrite += delayMultiplier || 1;
 
@@ -221,13 +299,12 @@ const handleWriteDelay = async <T>(
     currentTime < lastWriteRequestTime + DELAY * nbInQueueWrite
   ) {
     if (VERBOSE_MODE)
-      console.log(
-        "*** force DELAY [WRITE]",
-        nbInQueueWrite,
-        lastWriteRequestTime
+      console.log("*** force DELAY [WRITE]", {
+        nbInQueueWrite: nbInQueueWrite / (delayMultiplier || 1),
+        timeout: lastWriteRequestTime
           ? lastWriteRequestTime + DELAY * nbInQueueWrite - currentTime
-          : 0
-      );
+          : 0,
+      });
     await new Promise((resolve) =>
       setTimeout(
         () => resolve(null),
@@ -238,7 +315,12 @@ const handleWriteDelay = async <T>(
     );
   }
 
-  const res: T = await handleWriteTryCatch(callback, delayMultiplier);
+  const res: T = await handleWriteTryCatch({
+    callback,
+    writeCatchCount,
+    delayMultiplier,
+    onTimeoutCallback,
+  });
 
   return res;
 };
@@ -282,12 +364,14 @@ export const sheetAPI = {
     if (sheetId) {
       const cacheKey = sheetId;
       if (disableCache || tabIdsCache[cacheKey] === undefined) {
-        await handleReadDelay(async () => {
-          tabIdsCache[cacheKey] = await getSheetTabIds({
-            sheetId,
-            AUTH_JSON_PATH,
-            VERBOSE_MODE,
-          });
+        await handleReadDelay({
+          callback: async () => {
+            tabIdsCache[cacheKey] = await getSheetTabIds({
+              sheetId,
+              AUTH_JSON_PATH,
+              VERBOSE_MODE,
+            });
+          },
         });
       } else if (VERBOSE_MODE) console.log("*** using cache 👍");
 
@@ -318,14 +402,16 @@ export const sheetAPI = {
     const cacheKey = sheetId + ":" + tabId;
 
     if (disableCache || tabCache[cacheKey] === undefined) {
-      await handleReadDelay(async () => {
-        tabCache[cacheKey] = await importSheetData({
-          sheetId,
-          tabId,
-          headerRowIndex,
-          AUTH_JSON_PATH,
-          VERBOSE_MODE,
-        });
+      await handleReadDelay({
+        callback: async () => {
+          tabCache[cacheKey] = await importSheetData({
+            sheetId,
+            tabId,
+            headerRowIndex,
+            AUTH_JSON_PATH,
+            VERBOSE_MODE,
+          });
+        },
       });
     } else if (VERBOSE_MODE) console.log("*** using cache 👍");
 
@@ -339,14 +425,16 @@ export const sheetAPI = {
   getTabMetaData: async ({ sheetId, fields, ranges }: GetTabMetaDataProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getTabMetaData");
 
-    const metaData = await handleReadDelay(async () => {
-      const sheetApp = appSheet(AUTH_JSON_PATH);
+    const metaData = await handleReadDelay({
+      callback: async () => {
+        const sheetApp = appSheet(AUTH_JSON_PATH);
 
-      return await sheetApp.spreadsheets.get({
-        spreadsheetId: sheetId,
-        fields,
-        ranges,
-      });
+        return await sheetApp.spreadsheets.get({
+          spreadsheetId: sheetId,
+          fields,
+          ranges,
+        });
+      },
     });
 
     return metaData;
@@ -364,12 +452,14 @@ export const sheetAPI = {
     const cacheKey = "getTabSize:" + sheetId + ":" + tabName;
 
     if (tabSizesCache[cacheKey] === undefined) {
-      await handleReadDelay(async () => {
-        tabSizesCache[cacheKey] = await getTabSize({
-          sheetId,
-          tabName,
-          AUTH_JSON_PATH,
-        });
+      await handleReadDelay({
+        callback: async () => {
+          tabSizesCache[cacheKey] = await getTabSize({
+            sheetId,
+            tabName,
+            AUTH_JSON_PATH,
+          });
+        },
       });
     } else if (VERBOSE_MODE) console.log("*** using cache 👍");
 
@@ -397,14 +487,16 @@ export const sheetAPI = {
   }: UpdateSheetRangeProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.updateRange");
 
-    await handleWriteDelay(async () => {
-      await updateSheetRange({
-        sheetId,
-        tabName,
-        startCoords,
-        data,
-        AUTH_JSON_PATH,
-      });
+    await handleWriteDelay({
+      callback: async () => {
+        await updateSheetRange({
+          sheetId,
+          tabName,
+          startCoords,
+          data,
+          AUTH_JSON_PATH,
+        });
+      },
     });
   },
 
@@ -419,14 +511,16 @@ export const sheetAPI = {
     const tabId = iTabList.filter((tab) => tab.tabName === tabName)[0]?.tabId;
     if (tabId === undefined) throw new Error(`tab ${tabName} not found`);
 
-    await handleWriteDelay(async () => {
-      await exportToSheet({
-        datas: data,
-        sheetId: tabId,
-        exportSheetId: sheetId,
-        VERBOSE_MODE: false,
-        AUTH_JSON_PATH,
-      });
+    await handleWriteDelay({
+      callback: async () => {
+        await exportToSheet({
+          datas: data,
+          sheetId: tabId,
+          exportSheetId: sheetId,
+          VERBOSE_MODE: false,
+          AUTH_JSON_PATH,
+        });
+      },
     });
   },
 
@@ -446,12 +540,14 @@ export const sheetAPI = {
 
     let protectedRangesIds: number[] = [];
 
-    await handleReadDelay(async () => {
-      protectedRangesIds = await batchUpdate.getProtectedRangeIds({
-        spreadsheetId: sheetId,
-        sheetId: parseInt(tabId, 10),
-        AUTH_JSON_PATH,
-      });
+    await handleReadDelay({
+      callback: async () => {
+        protectedRangesIds = await batchUpdate.getProtectedRangeIds({
+          spreadsheetId: sheetId,
+          sheetId: parseInt(tabId, 10),
+          AUTH_JSON_PATH,
+        });
+      },
     });
 
     return protectedRangesIds;
@@ -466,16 +562,21 @@ export const sheetAPI = {
   }: DeleteProtectedRangeProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.deleteProtectedRange");
 
-    await handleWriteDelay(async () => {
-      await batchUpdate.deleteProtectedRange({
-        spreadsheetId: sheetId,
-        protectedRangeIds,
-        AUTH_JSON_PATH,
-        VERBOSE_MODE,
-      });
+    await handleWriteDelay({
+      callback: async () => {
+        await batchUpdate.deleteProtectedRange({
+          spreadsheetId: sheetId,
+          protectedRangeIds,
+          AUTH_JSON_PATH,
+          VERBOSE_MODE,
+        });
+      },
     });
   },
 
+  /**
+   * Add a request to batch buffer
+   */
   addBatchProtectedRange: ({
     sheetId,
     editors,
@@ -498,15 +599,40 @@ export const sheetAPI = {
     });
   },
 
-  runBatchProtectedRange: async ({ sheetId }: RunBatchProtectedRangeProps) => {
+  /**
+   * Clear all requests batch buffer
+   */
+  clearBuffer: async () => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.clearBuffer");
+    batchUpdate.clearBuffer();
+  },
+
+  /**
+   * Return all requests in batch buffer
+   */
+  getBatchProtectedRange: async () => {
+    if (VERBOSE_MODE) console.log("*** sheetAPI.getBatchProtectedRange");
+    return batchUpdate.getBatchProtectedRange();
+  },
+
+  /**
+   * Run all requests in batch buffer
+   */
+  runBatchProtectedRange: async ({
+    sheetId,
+    onTimeoutCallback,
+  }: RunBatchProtectedRangeProps) => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.runBatchProtectedRange");
 
-    await handleWriteDelay(async () => {
-      await batchUpdate.runProtectedRange({
-        spreadsheetId: sheetId,
-        AUTH_JSON_PATH,
-        VERBOSE_MODE,
-      });
+    await handleWriteDelay({
+      callback: async () => {
+        await batchUpdate.runProtectedRange({
+          spreadsheetId: sheetId,
+          AUTH_JSON_PATH,
+          VERBOSE_MODE,
+        });
+      },
+      onTimeoutCallback,
     });
   },
 
@@ -524,15 +650,17 @@ export const sheetAPI = {
     let iTabList = tabList;
     if (!iTabList) iTabList = await sheetAPI.getTabIds({ sheetId });
 
-    await handleWriteDelay(async () => {
-      await clearTabData({
-        sheetId,
-        tabList: iTabList,
-        tabName,
-        headerRowIndex,
-        AUTH_JSON_PATH,
-        VERBOSE_MODE,
-      });
+    await handleWriteDelay({
+      callback: async () => {
+        await clearTabData({
+          sheetId,
+          tabList: iTabList,
+          tabName,
+          headerRowIndex,
+          AUTH_JSON_PATH,
+          VERBOSE_MODE,
+        });
+      },
     });
   },
 };
