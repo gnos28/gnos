@@ -602,7 +602,7 @@ export const sheetAPI = {
   /**
    * Clear all requests batch buffer
    */
-  clearBuffer: async () => {
+  clearBuffer: () => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.clearBuffer");
     batchUpdate.clearBuffer();
   },
@@ -610,7 +610,7 @@ export const sheetAPI = {
   /**
    * Return all requests in batch buffer
    */
-  getBatchProtectedRange: async () => {
+  getBatchProtectedRange: () => {
     if (VERBOSE_MODE) console.log("*** sheetAPI.getBatchProtectedRange");
     return batchUpdate.getBatchProtectedRange();
   },
